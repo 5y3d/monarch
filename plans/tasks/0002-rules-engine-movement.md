@@ -28,21 +28,47 @@ Rules to encode (see the master plan's architectural decisions for full context)
 
 ## AFK tasks
 
-- [ ] Implement board representation and the standard starting position for the 7x7 variant
-- [ ] Implement legal move generation for Rook, Knight, Bishop, and Pawn (including the 2-square
+- [x] Implement board representation and the standard starting position for the 7x7 variant
+- [x] Implement legal move generation for Rook, Knight, Bishop, and Pawn (including the 2-square
       first move and diagonal captures)
-- [ ] Implement legal move generation for the Monarch (queen-style directions, capped at 4
+- [x] Implement legal move generation for the Monarch (queen-style directions, capped at 4
       squares, allowed to move into attacked squares)
-- [ ] Implement move application (updating board state, handling captures)
-- [ ] Implement pawn promotion (choice of Rook/Knight/Bishop) when a pawn reaches the last rank
-- [ ] Write unit tests covering movement, blocking, capturing, and promotion for every piece type,
+- [x] Implement move application (updating board state, handling captures)
+- [x] Implement pawn promotion (choice of Rook/Knight/Bishop) when a pawn reaches the last rank
+- [x] Write unit tests covering movement, blocking, capturing, and promotion for every piece type,
       including edge-of-board cases
 
 ## Acceptance criteria
 
-- [ ] Given a board state, the engine returns the correct legal destination squares for any piece,
+- [x] Given a board state, the engine returns the correct legal destination squares for any piece,
       including the Monarch's capped range
-- [ ] Illegal moves (off-board, blocked, moving through pieces for sliding pieces, wrong pawn
+- [x] Illegal moves (off-board, blocked, moving through pieces for sliding pieces, wrong pawn
       direction) are rejected
-- [ ] Pawn promotion produces the chosen piece type and never allows promoting to Monarch
-- [ ] Unit test suite passes and covers all piece types plus edge/boundary cases
+- [x] Pawn promotion produces the chosen piece type and never allows promoting to Monarch
+- [x] Unit test suite passes and covers all piece types plus edge/boundary cases
+
+## Implementation log
+
+- New module at `server/src/rules/`: `types.ts` (`Color`, `PieceType`, `Piece`, `Square`, `Board`,
+  `Move`, `BOARD_SIZE`), `board.ts` (`createInitialBoard`), `moves.ts` (`getMoves`), `applyMove.ts`
+  (`applyMove`). No framework dependencies, pure functions over an immutable `Board`
+  (`(Piece | null)[][]`).
+- `getMoves(board, square)` dispatches per piece type: Rook/Bishop/Monarch share a `slideMoves`
+  helper parameterized by direction set and max distance (Monarch reuses Rook+Bishop's 8
+  directions capped at `MONARCH_MAX_DISTANCE = 4`); Knight uses fixed L-shaped offsets; Pawn has
+  its own function (direction and home row keyed by color, diagonal-only capture, no straight
+  capture).
+- No en passant means no move-history state was needed for pawns: "eligible for a 2-square first
+  move" is inferred from the pawn still sitting on its home row (row 1 for white, row 5 for
+  black), which is a safe inference since pawns only ever move forward.
+- `applyMove(board, move)` returns a new board (original untouched), removes any captured piece,
+  and promotes a pawn landing on the last rank to `move.promotion`. Promoting to Monarch is
+  impossible by construction: `Move.promotion` is typed as `"rook" | "knight" | "bishop"` only.
+  Throws if a pawn move reaches the last rank without a promotion choice.
+- Check/checkmate/"trapped" detection is explicitly out of scope here (task 0003); `getMoves`
+  returns pseudo-legal moves only — e.g. the Monarch may be offered a move into an attacked
+  square, and no move is filtered out because it would leave a Monarch in check.
+- 32 unit tests across 8 files in `server/test/rules/`, covering every piece type's movement,
+  blocking/capturing, edge-of-board clipping (corners), pawn direction-by-color, and promotion
+  (including the "promotion required" and "no promotion before the last rank" edge cases). Built
+  test-first (red → green) per the tdd skill, one behavior at a time.
