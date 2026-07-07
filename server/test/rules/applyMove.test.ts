@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { applyMove } from "../../src/rules/applyMove.js";
+import { createInitialBoard } from "../../src/rules/board.js";
 import type { Board, PieceType } from "../../src/rules/types.js";
 
 function emptyBoard(): Board {
@@ -113,6 +114,18 @@ describe("applyMove", () => {
     expect(() =>
       applyMove(board, { from: { row: 7, col: 0 }, to: { row: 6, col: 0 } }),
     ).toThrow(/off the board/i);
+  });
+
+  it("composes correctly against the real starting position: a home-row pawn double-step captures nothing and clears its path", () => {
+    const board = createInitialBoard();
+
+    const next = applyMove(board, { from: { row: 1, col: 3 }, to: { row: 3, col: 3 } });
+
+    expect(next[3][3]).toEqual({ type: "pawn", color: "white" });
+    expect(next[1][3]).toBeNull();
+    // The rest of the starting position is untouched.
+    expect(next[0][3]).toEqual({ type: "monarch", color: "white" });
+    expect(board[1][3]).toEqual({ type: "pawn", color: "white" }); // original board unmutated
   });
 
   it("rejects a promotion value outside rook/knight/bishop even if it bypasses the TypeScript type", () => {

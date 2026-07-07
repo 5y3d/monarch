@@ -113,6 +113,10 @@ function pawnMoves(board: Board, from: Square, piece: Piece): Square[] {
 }
 
 export function getMoves(board: Board, from: Square): Square[] {
+  if (!isOnBoard(from)) {
+    throw new Error(`getMoves: square is off the board: ${JSON.stringify(from)}`);
+  }
+
   const piece = board[from.row][from.col];
   if (piece === null) return [];
 

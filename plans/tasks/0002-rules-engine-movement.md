@@ -62,13 +62,26 @@ Rules to encode (see the master plan's architectural decisions for full context)
   move" is inferred from the pawn still sitting on its home row (row 1 for white, row 5 for
   black), which is a safe inference since pawns only ever move forward.
 - `applyMove(board, move)` returns a new board (original untouched), removes any captured piece,
-  and promotes a pawn landing on the last rank to `move.promotion`. Promoting to Monarch is
-  impossible by construction: `Move.promotion` is typed as `"rook" | "knight" | "bishop"` only.
-  Throws if a pawn move reaches the last rank without a promotion choice.
+  and promotes a pawn landing on the last rank to `move.promotion`. Both `getMoves` and `applyMove`
+  reject an off-board square with a clear `Error` (`"... is off the board: ..."`) rather than
+  crashing with a raw `TypeError` or silently writing to a non-index property — `isOnBoard` lives
+  in `board.ts` and is shared by both. `applyMove` also validates that `move.to` is actually in
+  `getMoves(board, move.from)` before applying it, so a blocked or wrong-shaped move throws instead
+  of being silently applied. Promotion is validated at **runtime** against a `VALID_PROMOTIONS` set
+  (`rook`/`knight`/`bishop`), not just via `Move.promotion`'s compile-time type — this matters
+  because the architectural header notes this module is the server's sole authority on move
+  legality, so it can't assume every caller is itself type-checked TypeScript. `getMoves` also
+  throws for an unrecognized `piece.type` instead of returning `undefined`. Found and fixed via two
+  `task-review --afk` passes (initial pass: Spec + Bug flagged the missing move-legality/bounds
+  checks, Standards + Spec + Bug all independently flagged the promotion gap; re-review pass:
+  Bug caught that the same bounds hardening had been applied to `applyMove` but not to `getMoves`,
+  a separate exported entry point with the identical failure mode).
 - Check/checkmate/"trapped" detection is explicitly out of scope here (task 0003); `getMoves`
   returns pseudo-legal moves only — e.g. the Monarch may be offered a move into an attacked
   square, and no move is filtered out because it would leave a Monarch in check.
-- 32 unit tests across 8 files in `server/test/rules/`, covering every piece type's movement,
-  blocking/capturing, edge-of-board clipping (corners), pawn direction-by-color, and promotion
-  (including the "promotion required" and "no promotion before the last rank" edge cases). Built
-  test-first (red → green) per the tdd skill, one behavior at a time.
+- 43 unit tests across 8 files in `server/test/rules/`, covering every piece type's movement,
+  blocking/capturing, edge-of-board clipping (corners), pawn direction-by-color, promotion
+  (including "promotion required" and "no promotion before the last rank"), the off-board/illegal-
+  move rejections above, and two integration-style tests that run `getMoves`/`applyMove` against
+  the real `createInitialBoard()` output rather than only synthetic boards. Built test-first
+  (red → green) per the tdd skill, one behavior at a time.

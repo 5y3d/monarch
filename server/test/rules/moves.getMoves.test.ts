@@ -22,6 +22,14 @@ describe("getMoves — dispatch", () => {
     expect(getMoves(board, { row: 3, col: 3 })).toEqual([]);
   });
 
+  it("rejects an off-board 'from' square with a clear domain error, not an unrelated TypeError", () => {
+    const board = emptyBoard();
+
+    expect(() => getMoves(board, { row: 7, col: 0 })).toThrow(/off the board/i);
+    expect(() => getMoves(board, { row: -1, col: 0 })).toThrow(/off the board/i);
+    expect(() => getMoves(board, { row: 3, col: 7 })).toThrow(/off the board/i);
+  });
+
   it("composes correctly against the real starting position: a home-row pawn has 2 moves", () => {
     const board = createInitialBoard();
 
