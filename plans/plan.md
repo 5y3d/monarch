@@ -78,7 +78,7 @@ Durable decisions that apply across all tasks:
 ## Tasks
 
 - [x] 0001 · Project scaffold → tasks/done/0001-project-scaffold.md
-- [ ] 0002 · Rules engine: board & piece movement (after 0001) → tasks/0002-rules-engine-movement.md
+- [~] 0002 · Rules engine: board & piece movement (after 0001) → tasks/0002-rules-engine-movement.md
 - [ ] 0003 · Rules engine: win/draw detection (after 0002) → tasks/0003-rules-engine-endgame.md
 - [ ] 0004 · Auth: register/login/logout (after 0001) → tasks/0004-auth.md
 - [ ] 0005 · Game creation & joining via game code (after 0004) → tasks/0005-game-sessions.md
