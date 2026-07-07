@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { applyMove } from "../../src/rules/applyMove.js";
-import type { Board } from "../../src/rules/types.js";
+import type { Board, PieceType } from "../../src/rules/types.js";
 
 function emptyBoard(): Board {
   return Array.from({ length: 7 }, () => Array.from({ length: 7 }, () => null));
@@ -70,8 +70,61 @@ describe("applyMove", () => {
     const board = emptyBoard();
     board[3][3] = { type: "pawn", color: "white" };
 
-    const next = applyMove(board, { from: { row: 3, col: 3 }, to: { row: 4, col: 3 } });
+    const next = applyMove(board, {
+      from: { row: 3, col: 3 },
+      to: { row: 4, col: 3 },
+      promotion: "rook",
+    });
 
     expect(next[4][3]).toEqual({ type: "pawn", color: "white" });
+  });
+
+  it("rejects a move whose destination is not a legal move for the piece (e.g. a rook moving diagonally)", () => {
+    const board = emptyBoard();
+    board[3][3] = { type: "rook", color: "white" };
+
+    expect(() =>
+      applyMove(board, { from: { row: 3, col: 3 }, to: { row: 4, col: 4 } }),
+    ).toThrow();
+  });
+
+  it("rejects a sliding move that passes through a blocking piece, even though the destination square is empty", () => {
+    const board = emptyBoard();
+    board[3][3] = { type: "rook", color: "white" };
+    board[3][5] = { type: "pawn", color: "white" };
+
+    expect(() =>
+      applyMove(board, { from: { row: 3, col: 3 }, to: { row: 3, col: 6 } }),
+    ).toThrow();
+  });
+
+  it("rejects an off-board destination instead of crashing or writing to a non-index property", () => {
+    const board = emptyBoard();
+    board[3][3] = { type: "rook", color: "white" };
+
+    expect(() =>
+      applyMove(board, { from: { row: 3, col: 3 }, to: { row: 3, col: -1 } }),
+    ).toThrow();
+  });
+
+  it("rejects an off-board 'from' square with a clear domain error, not an unrelated TypeError", () => {
+    const board = emptyBoard();
+
+    expect(() =>
+      applyMove(board, { from: { row: 7, col: 0 }, to: { row: 6, col: 0 } }),
+    ).toThrow(/off the board/i);
+  });
+
+  it("rejects a promotion value outside rook/knight/bishop even if it bypasses the TypeScript type", () => {
+    const board = emptyBoard();
+    board[5][3] = { type: "pawn", color: "white" };
+
+    expect(() =>
+      applyMove(board, {
+        from: { row: 5, col: 3 },
+        to: { row: 6, col: 3 },
+        promotion: "monarch" as PieceType as "rook",
+      }),
+    ).toThrow();
   });
 });

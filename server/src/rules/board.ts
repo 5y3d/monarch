@@ -1,4 +1,10 @@
-import { BOARD_SIZE, type Board, type Color, type Piece, type PieceType } from "./types.js";
+import { BOARD_SIZE, type Board, type Color, type Piece, type PieceType, type Square } from "./types.js";
+
+export function isOnBoard(square: Square): boolean {
+  return (
+    square.row >= 0 && square.row < BOARD_SIZE && square.col >= 0 && square.col < BOARD_SIZE
+  );
+}
 
 const BACK_RANK: PieceType[] = ["rook", "knight", "bishop", "monarch", "bishop", "knight", "rook"];
 

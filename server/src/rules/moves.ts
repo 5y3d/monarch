@@ -1,4 +1,7 @@
+import { isOnBoard } from "./board.js";
 import { BOARD_SIZE, type Board, type Piece, type Square } from "./types.js";
+
+const MAX_SLIDE_DISTANCE = BOARD_SIZE - 1;
 
 type Direction = readonly [number, number];
 
@@ -32,12 +35,6 @@ const KNIGHT_OFFSETS: readonly Direction[] = [
 
 const PAWN_HOME_ROW = { white: 1, black: 5 } as const;
 const PAWN_DIRECTION = { white: 1, black: -1 } as const;
-
-function isOnBoard(square: Square): boolean {
-  return (
-    square.row >= 0 && square.row < BOARD_SIZE && square.col >= 0 && square.col < BOARD_SIZE
-  );
-}
 
 function slideMoves(
   board: Board,
@@ -121,14 +118,16 @@ export function getMoves(board: Board, from: Square): Square[] {
 
   switch (piece.type) {
     case "rook":
-      return slideMoves(board, from, piece, ROOK_DIRECTIONS, BOARD_SIZE);
+      return slideMoves(board, from, piece, ROOK_DIRECTIONS, MAX_SLIDE_DISTANCE);
     case "bishop":
-      return slideMoves(board, from, piece, BISHOP_DIRECTIONS, BOARD_SIZE);
+      return slideMoves(board, from, piece, BISHOP_DIRECTIONS, MAX_SLIDE_DISTANCE);
     case "monarch":
       return slideMoves(board, from, piece, MONARCH_DIRECTIONS, MONARCH_MAX_DISTANCE);
     case "knight":
       return knightMoves(board, from, piece);
     case "pawn":
       return pawnMoves(board, from, piece);
+    default:
+      throw new Error(`getMoves: unrecognized piece type "${piece.type}"`);
   }
 }

@@ -7,19 +7,17 @@ function emptyBoard(): Board {
 }
 
 describe("getMoves — monarch", () => {
-  it("moves like a queen but capped at 4 squares per direction", () => {
+  it("moves like a queen in all 8 directions when unobstructed", () => {
     const board = emptyBoard();
     board[3][3] = { type: "monarch", color: "white" };
 
     const moves = getMoves(board, { row: 3, col: 3 });
 
-    // Straight down the column: rows 4,5,6 reachable, row 3+4=7 is off-board anyway,
-    // but check the cap directly on a longer, unobstructed diagonal-free axis using column.
-    expect(moves).toContainEqual({ row: 3, col: 4 }); // 1 square right
-    expect(moves).toContainEqual({ row: 3, col: 5 }); // 2 squares (within cap and board)
-    // Diagonal up-right is capped at 4: from (3,3), 4 squares would be (7,7) which is off-board
-    // anyway on this 7x7 board, so verify the cap on-board using a direction with room to spare
-    // by placing the monarch near a corner instead.
+    expect(moves).toContainEqual({ row: 3, col: 4 }); // right
+    expect(moves).toContainEqual({ row: 3, col: 2 }); // left
+    expect(moves).toContainEqual({ row: 4, col: 3 }); // up
+    expect(moves).toContainEqual({ row: 2, col: 3 }); // down
+    expect(moves).toContainEqual({ row: 4, col: 4 }); // diagonal
   });
 
   it("cannot move more than 4 squares even when the board would allow further travel", () => {
