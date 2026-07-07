@@ -32,3 +32,6 @@ yarn-error.log*
 
 # Test coverage
 coverage/
+
+# Task review output (ephemeral, branch-scoped)
+reviews/
