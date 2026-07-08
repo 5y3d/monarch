@@ -2,7 +2,12 @@ import { BOARD_SIZE, type Board, type Color, type Piece, type PieceType, type Sq
 
 export function isOnBoard(square: Square): boolean {
   return (
-    square.row >= 0 && square.row < BOARD_SIZE && square.col >= 0 && square.col < BOARD_SIZE
+    Number.isInteger(square.row) &&
+    Number.isInteger(square.col) &&
+    square.row >= 0 &&
+    square.row < BOARD_SIZE &&
+    square.col >= 0 &&
+    square.col < BOARD_SIZE
   );
 }
 

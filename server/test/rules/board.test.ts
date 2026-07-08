@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createInitialBoard } from "../../src/rules/board.js";
+import { createInitialBoard, isOnBoard } from "../../src/rules/board.js";
 
 describe("createInitialBoard", () => {
   it("places white's back rank on row 0 and black's on row 6", () => {
@@ -39,5 +39,12 @@ describe("createInitialBoard", () => {
         expect(board[row][col]).toBeNull();
       }
     }
+  });
+});
+
+describe("isOnBoard", () => {
+  it("rejects a non-integer coordinate instead of letting it pass the range check", () => {
+    expect(isOnBoard({ row: 3.5, col: 2 })).toBe(false);
+    expect(isOnBoard({ row: 3, col: 2.1 })).toBe(false);
   });
 });

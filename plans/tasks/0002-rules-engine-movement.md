@@ -71,17 +71,22 @@ Rules to encode (see the master plan's architectural decisions for full context)
   (`rook`/`knight`/`bishop`), not just via `Move.promotion`'s compile-time type — this matters
   because the architectural header notes this module is the server's sole authority on move
   legality, so it can't assume every caller is itself type-checked TypeScript. `getMoves` also
-  throws for an unrecognized `piece.type` instead of returning `undefined`. Found and fixed via two
-  `task-review --afk` passes (initial pass: Spec + Bug flagged the missing move-legality/bounds
-  checks, Standards + Spec + Bug all independently flagged the promotion gap; re-review pass:
-  Bug caught that the same bounds hardening had been applied to `applyMove` but not to `getMoves`,
-  a separate exported entry point with the identical failure mode).
+  throws for an unrecognized `piece.type` instead of returning `undefined`. `isOnBoard` also
+  requires both coordinates to be integers, not just in range, so a non-integer square (e.g. from
+  malformed input) is rejected the same way an out-of-range one is, rather than passing the range
+  check and crashing deeper in array indexing. Found and fixed via three `task-review --afk` passes
+  (initial pass: Spec + Bug flagged the missing move-legality/bounds checks, Standards + Spec + Bug
+  all independently flagged the promotion gap; re-review pass 1: Bug caught that the same bounds
+  hardening had been applied to `applyMove` but not to `getMoves`, a separate exported entry point
+  with the identical failure mode; re-review pass 2: all three lenses came back clean except a
+  minor non-integer-coordinate gap in `isOnBoard`, fixed here).
 - Check/checkmate/"trapped" detection is explicitly out of scope here (task 0003); `getMoves`
   returns pseudo-legal moves only — e.g. the Monarch may be offered a move into an attacked
   square, and no move is filtered out because it would leave a Monarch in check.
-- 43 unit tests across 8 files in `server/test/rules/`, covering every piece type's movement,
+- 44 unit tests across 8 files in `server/test/rules/`, covering every piece type's movement,
   blocking/capturing, edge-of-board clipping (corners), pawn direction-by-color, promotion
   (including "promotion required" and "no promotion before the last rank"), the off-board/illegal-
-  move rejections above, and two integration-style tests that run `getMoves`/`applyMove` against
-  the real `createInitialBoard()` output rather than only synthetic boards. Built test-first
+  move rejections above (including that `isOnBoard` rejects non-integer coordinates, not just
+  out-of-range ones), and four integration-style tests that run `getMoves`/`applyMove` against the
+  real `createInitialBoard()` output rather than only synthetic boards. Built test-first
   (red → green) per the tdd skill, one behavior at a time.
